@@ -37,7 +37,6 @@ workdir=/tmp
 db_name=$2
 config=$workdir/"$db_name.json"
 
-
 mc="python -m mongo_connector.connector \
     -c $config >/dev/null 2> $error & \
     echo "'$!'" > $pidfile"
