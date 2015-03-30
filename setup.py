@@ -75,8 +75,9 @@ class InstallService(Command):
         else:
             mkpath("/var/log/mongo-connector")
             mkpath("/etc/init.d")
+            mkpath("/etc/mongo-connector")
             copy_file("./lib/jq", "/usr/bin/jq")
-            copy_file("./config.json", "/etc/mongo-connector.json")
+            copy_file("./config.json", "/etc/mongo-connector/base.json")
             copy_file("./scripts/mongo-connector",
                       "/etc/init.d/mongo-connector")
 
