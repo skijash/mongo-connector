@@ -38,7 +38,7 @@ jq_merge()
     jq -s '.[0] + .[1]' $1 $2
 }
 
-mc="/usr/bin/python -m mongo_connector.connector \
+mc="python -m mongo_connector.connector \
     -c $config >/dev/null 2> $error & \
     echo "'$!'" > $pidfile"
 
@@ -48,7 +48,7 @@ start()
         echo "Using configuration " $base_config
     else
         echo "Merging base configuration"
-        config = $workdir/"$1.tmp.json"
+        config=$workdir/"$1.tmp.json"
         jq_merge "$base_config" "$1.json" > config
     fi
 
