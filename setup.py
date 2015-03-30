@@ -73,6 +73,7 @@ class InstallService(Command):
         elif os.geteuid() > 0:
             print("Must be root user")
         else:
+            mkpath("/var/run/mongo-connector")
             mkpath("/var/log/mongo-connector")
             mkpath("/etc/init.d")
             mkpath("/etc/mongo-connector")
