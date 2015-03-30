@@ -34,7 +34,7 @@ config_dir=/etc/mongo-connector/config
 error=/var/log/mongo-connector/mongo-connector.err
 workdir=/tmp
 
-db_name=$1
+db_name=$2
 config=$workdir/"$db_name.json"
 
 
