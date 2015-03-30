@@ -46,7 +46,7 @@ start()
     else
         echo "Merging base configuration"
         config=$workdir/"$1.tmp.json"
-        jq_merge "$base_config" $config_dir/"$1.json" > config
+        jq_merge "$base_config" $config_dir/"$1.json" > $config
     fi
 
     mc="python -m mongo_connector.connector \
@@ -78,6 +78,7 @@ stop()
     RETVAL=$?
     if [ $RETVAL -eq 0 ]; then
         echo "done."
+        rm -f $config
         rm -f $lockfile
     else
         echo "failed. Please check exit code and logs for more information"
