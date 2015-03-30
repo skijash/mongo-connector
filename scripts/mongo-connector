@@ -39,10 +39,6 @@ jq_merge()
     jq -s '.[0] + .[1]' $1 $2
 }
 
-mc="python -m mongo_connector.connector \
-    -c $config >/dev/null 2> $error & \
-    echo "'$!'" > $pidfile"
-
 start()
 {
     if [ -z "$1" ]; then
@@ -52,6 +48,10 @@ start()
         config=$workdir/"$1.tmp.json"
         jq_merge "$base_config" $config_dir/"$1.json" > config
     fi
+
+    mc="python -m mongo_connector.connector \
+    -c $config >/dev/null 2> $error & \
+    echo "'$!'" > $pidfile"
 
     echo "starting mongo-connector "
     if [ "$DEBIAN" ]; then
