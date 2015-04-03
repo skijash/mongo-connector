@@ -28,13 +28,13 @@ fi
 
 RETVAL=0
 
-pidfile=/var/run/mongo-connector/mc.pid
+db_name=$2
+pidfile=/var/run/mongo-connector/mc_$db_name.pid
 base_config=/etc/mongo-connector/base.json
 config_dir=/etc/mongo-connector/config
-error=/var/log/mongo-connector/mongo-connector.err
+error=/var/log/mongo-connector/mongo-connector_$db_name.err
 workdir=/var/run/mongo-connector
 
-db_name=$2
 config=$workdir/"$db_name.json"
 oplog=$workdir/"$db_name.oplog"
 
