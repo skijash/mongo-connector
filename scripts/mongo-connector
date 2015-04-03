@@ -36,9 +36,10 @@ workdir=/var/run/mongo-connector
 
 db_name=$2
 config=$workdir/"$db_name.json"
+oplog=$workdir/"$db_name.oplog"
 
 mc="python -m mongo_connector.connector \
-    -c $config >/dev/null 2> $error & \
+    -c $config -o $oplog >/dev/null 2> $error & \
     echo "'$!'" > $pidfile"
 
 
