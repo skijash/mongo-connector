@@ -62,7 +62,7 @@ class Connector(threading.Thread):
         if doc_managers:
             self.doc_managers = doc_managers
         else:
-            LOG.info('No doc managers specified, using simulator.')
+            LOG.warning('No doc managers specified, using simulator.')
             self.doc_managers = (simulator.DocManager(),)
 
         # Password for authentication
@@ -113,7 +113,7 @@ class Connector(threading.Thread):
                 info_str = ("MongoConnector: Can't find %s, "
                             "attempting to create an empty progress log" %
                             self.oplog_checkpoint)
-                LOG.info(info_str)
+                LOG.warning(info_str)
                 try:
                     # Create oplog progress file
                     open(self.oplog_checkpoint, "w").close()
@@ -136,7 +136,7 @@ class Connector(threading.Thread):
         password_file = config['authentication.passwordFile']
         if password_file is not None:
             try:
-                auth_key = open(config['passwordFile']).read()
+                auth_key = open(config['authentication.passwordFile']).read()
                 auth_key = re.sub(r'\s', '', auth_key)
             except IOError:
                 LOG.error('Could not load password file!')
@@ -438,10 +438,10 @@ def get_config_options():
 
     def apply_verbosity(option, cli_values):
         if cli_values['verbose']:
-            option.value = 1
-        if option.value < 0:
+            option.value = 3
+        if option.value < 0 or option.value > 3:
             raise errors.InvalidConfiguration(
-                "verbosity must be non-negative.")
+                "verbosity must be in the range [0, 3].")
 
     verbosity = add_option(
         config_key="verbosity",
@@ -452,8 +452,7 @@ def get_config_options():
     # -v enables verbose logging
     verbosity.add_cli(
         "-v", "--verbose", action="store_true",
-        dest="verbose", help=
-        "Sets verbose logging to be on.")
+        dest="verbose", help="Enables verbose logging.")
 
     def apply_logging(option, cli_values):
         if cli_values['logfile'] and cli_values['enable_syslog']:
@@ -885,7 +884,7 @@ def get_config_options():
             ssl_cert_reqs)
     ssl = add_option(
         config_key="ssl",
-        default=None,
+        default={},
         type=dict,
         apply_function=apply_ssl)
     ssl.add_cli(
@@ -943,20 +942,18 @@ def get_config_options():
     return result
 
 
-@log_fatal_exceptions
-def main():
-    """ Starts the mongo connector (assuming CLI)
-    """
-    conf = config.Config(get_config_options())
-    conf.parse_args()
-
+def setup_logging(conf):
     root_logger = logging.getLogger()
     formatter = logging.Formatter(
         "%(asctime)s [%(levelname)s] %(name)s:%(lineno)d - %(message)s")
 
-    loglevel = logging.INFO
-    if conf['verbosity'] > 0:
-        loglevel = logging.DEBUG
+    log_levels = [
+        logging.ERROR,
+        logging.WARNING,
+        logging.INFO,
+        logging.DEBUG
+    ]
+    loglevel = log_levels[conf['verbosity']]
     root_logger.setLevel(loglevel)
 
     if conf['logging.type'] == 'file':
@@ -979,13 +976,28 @@ def main():
         )
         print("Logging to system log at %s" % conf['logging.host'])
 
-    elif conf['logging.type'] is None:
+    elif conf['logging.type'] == 'stream':
         log_out = logging.StreamHandler()
+
+    else:
+        print("Logging type must be one of 'stream', 'syslog', or 'file', not "
+              "'%s'." % conf['logging.type'])
+        sys.exit(1)
 
     log_out.setLevel(loglevel)
     log_out.setFormatter(formatter)
     root_logger.addHandler(log_out)
+    return root_logger
 
+
+@log_fatal_exceptions
+def main():
+    """ Starts the mongo connector (assuming CLI)
+    """
+    conf = config.Config(get_config_options())
+    conf.parse_args()
+
+    setup_logging(conf)
     LOG.info('Beginning Mongo Connector')
 
     connector = Connector.from_config(conf)
