@@ -17,6 +17,11 @@ conf_locations = {
 }
 
 
+def read_oplog_file(oplog_file):
+    progress = json.load(open(oplog_file))
+    return progress[1]
+
+
 def read_conf(account_name):
     if account_name in conf_locations:
         conf = json.load(open(conf_locations[account_name]))
@@ -34,9 +39,12 @@ def read_conf(account_name):
                         conf_locations['base'])
             return read_conf('base')
 
+    oplog_file = '%s/%s.oplog' % (PROGRESS_DIR, account_name)
+
     return {
         'mainAddress': conf['mainAddress'],
-        'oplogFile': conf['oplogFile']
+        'oplogFile': oplog_file,
+        'progress': read_oplog_file(oplog_file)
     }
 
 
