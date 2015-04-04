@@ -9,7 +9,8 @@ logger = logging.getLogger(__name__)
 host = '0.0.0.0'
 port = 8080
 SERVICE_VERSION = '0.1'
-BASE_RESPONSE = {'service': 'mc status', 'version': SERVICE_VERSION}
+SERVICE_NAME = 'mc-status'
+BASE_RESPONSE = {'service': SERVICE_NAME, 'version': SERVICE_VERSION}
 PROGRESS_DIR = '/var/run/mongo-connector'
 
 conf_locations = {
@@ -60,5 +61,5 @@ def oplog_progress(account_name):
     response.update(read_conf(account_name))
     return response
 
-
-run(host=host, port=port)
+if __name__ == '__main__':
+    run(server=SERVICE_NAME, host=host, port=port)
