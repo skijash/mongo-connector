@@ -83,7 +83,7 @@ stop()
     if [ $RETVAL -eq 0 ]; then
         echo "done."
         rm -f $config
-        rm -f $lockfile
+        rm -f $pidfile
     else
         echo "failed. Please check exit code and logs for more information"
     fi
