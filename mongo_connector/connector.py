@@ -860,6 +860,26 @@ def get_config_options():
         " interval, which should be preferred to this"
         " option.")
 
+    def apply_ext_handlers(option, cli_values):
+        if cli_values['ext_handlers']:
+            handlers = cli_values['ext_handlers']
+            for handler in handlers.split(','):
+                if not os.path.isfile(handler):
+                    raise errors.InvalidConfiguration(
+                        "File %s doesn't exist" % handler)
+            option.value = handlers
+        print option.value
+
+    external_handlers = add_option(
+        config_key='extHandlers',
+        default=None,
+        type=list,
+        apply_function=apply_ext_handlers)
+
+    external_handlers.add_cli(
+        '--ext-handlers', dest='ext_handlers',
+        help='dummy help string')
+
     continue_on_error = add_option(
         config_key="continueOnError",
         default=False,

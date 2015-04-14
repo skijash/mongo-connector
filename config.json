@@ -52,5 +52,6 @@
             "__uniqueKey": "_id",
             "__autoCommitInterval": null
         }
-    ]
+    ],
+    "extHandlers": ["handler1"]
 }
