@@ -87,3 +87,16 @@ def log_fatal_exceptions(func):
             LOG.error("Fatal Exception")
             raise
     return wrapped
+
+
+def module_from_path(path):
+    if '/' not in path:
+        return __import__(path)
+
+    path = path.rsplit('/', 1)
+    if '.' in path[1]:
+        path[1] = path[1].split('.')[0]
+    import sys
+    if path[0] not in sys.path:
+        sys.path.append(path[0])
+    return __import__(path[1])

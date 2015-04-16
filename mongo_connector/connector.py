@@ -84,6 +84,9 @@ class Connector(threading.Thread):
         # Timezone awareness
         self.tz_aware = kwargs.get('tz_aware', False)
 
+        # External handlers for Mongo objects
+        self.ext_handlers = kwargs.get('ext_handlers', None)
+
         # SSL keyword arguments to MongoClient.
         ssl_certfile = kwargs.pop('ssl_certfile', None)
         ssl_ca_certs = kwargs.pop('ssl_ca_certs', None)
@@ -161,7 +164,8 @@ class Connector(threading.Thread):
             ssl_keyfile=config['ssl.sslKeyfile'],
             ssl_ca_certs=config['ssl.sslCACerts'],
             ssl_cert_reqs=config['ssl.sslCertificatePolicy'],
-            tz_aware=config['timezoneAware']
+            tz_aware=config['timezoneAware'],
+            ext_handlers=config['extHandlers']
         )
         return connector
 
@@ -862,13 +866,19 @@ def get_config_options():
 
     def apply_ext_handlers(option, cli_values):
         if cli_values['ext_handlers']:
+            import inspect
+
             handlers = cli_values['ext_handlers']
+            function_list = []
             for handler in handlers.split(','):
-                if not os.path.isfile(handler):
+                if not os.path.isfile(handler + '.py'):
                     raise errors.InvalidConfiguration(
                         "File %s doesn't exist" % handler)
-            option.value = handlers
-        print option.value
+                functions = inspect.getmembers(util.module_from_path(handler), inspect.isfunction)
+                for name, f in functions:
+                    if 'is_handler' in dir(f):
+                        function_list.append(f)
+            option.value = function_list
 
     external_handlers = add_option(
         config_key='extHandlers',
