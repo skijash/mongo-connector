@@ -41,7 +41,8 @@ class OplogThread(threading.Thread):
     Calls the appropriate method on DocManagers for each relevant oplog entry.
     """
     def __init__(self, primary_client, doc_managers,
-                 oplog_progress_dict, mongos_client=None, **kwargs):
+                 oplog_progress_dict, mongos_client=None,
+                 ext_handlers=None, **kwargs):
         super(OplogThread, self).__init__()
 
         self.batch_size = kwargs.get('batch_size', DEFAULT_BATCH_SIZE)
@@ -91,6 +92,8 @@ class OplogThread(threading.Thread):
         if not self.oplog.find_one():
             err_msg = 'OplogThread: No oplog for thread:'
             LOG.warning('%s %s' % (err_msg, self.primary_connection))
+
+        self.ext_handlers = ext_handlers
 
     @property
     def fields(self):
@@ -202,7 +205,9 @@ class OplogThread(threading.Thread):
                         if not self.filter_oplog_entry(entry):
                             continue
 
-                        #sync the current oplog operation
+                        self.handler_change_entry(entry)
+
+                        # sync the current oplog operation
                         operation = entry['op']
                         ns = entry['ns']
 
@@ -358,6 +363,12 @@ class OplogThread(threading.Thread):
 
         return entry
 
+    def handler_change_entry(self, entry):
+        """Calls external script functions"""
+        for f in self.ext_handlers:
+            f(entry)
+        return entry
+
     def get_oplog_cursor(self, timestamp=None):
         """Get a cursor to the oplog after the given timestamp, filtering
         entries not in the namespace set.
@@ -389,7 +400,7 @@ class OplogThread(threading.Thread):
         dump_set = self.namespace_set or []
         LOG.debug("OplogThread: Dumping set of collections %s " % dump_set)
 
-        #no namespaces specified
+        # no namespaces specified
         if not self.namespace_set:
             db_list = retry_until_ok(self.primary_client.database_names)
             for database in db_list:
@@ -509,7 +520,6 @@ class OplogThread(threading.Thread):
                 # mongo_connector.errors.ConnectionFailed
                 # mongo_connector.errors.OperationFailed
                 error_queue.put(sys.exc_info())
-
 
         # Extra threads (if any) that assist with collection dumps
         dumping_threads = []
@@ -733,8 +743,8 @@ class OplogThread(threading.Thread):
                     {'_id': {'$in': bson_obj_id_list}},
                     fields=self.fields
                 )
-                #doc list are docs in target system, to_update are
-                #docs in mongo
+                # doc list are docs in target system, to_update are
+                # docs in mongo
                 doc_hash = {}  # hash by _id
                 for doc in doc_list:
                     doc_hash[bson.objectid.ObjectId(doc['_id'])] = doc
@@ -748,7 +758,7 @@ class OplogThread(threading.Thread):
                             to_index.append(doc)
                 retry_until_ok(collect_existing_docs)
 
-                #delete the inconsistent documents
+                # delete the inconsistent documents
                 LOG.debug("OplogThread: Rollback, removing inconsistent "
                           "docs.")
                 remov_inc = 0
@@ -770,7 +780,7 @@ class OplogThread(threading.Thread):
                 LOG.debug("OplogThread: Rollback, removed %d docs." %
                           remov_inc)
 
-                #insert the ones from mongo
+                # insert the ones from mongo
                 LOG.debug("OplogThread: Rollback, inserting documents "
                           "from mongo.")
                 insert_inc = 0

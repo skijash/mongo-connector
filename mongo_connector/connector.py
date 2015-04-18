@@ -866,19 +866,20 @@ def get_config_options():
 
     def apply_ext_handlers(option, cli_values):
         if cli_values['ext_handlers']:
-            import inspect
+            option.value = cli_values['ext_handlers'].split(',')
 
-            handlers = cli_values['ext_handlers']
-            function_list = []
-            for handler in handlers.split(','):
-                if not os.path.isfile(handler + '.py'):
-                    raise errors.InvalidConfiguration(
-                        "File %s doesn't exist" % handler)
-                functions = inspect.getmembers(util.module_from_path(handler), inspect.isfunction)
-                for name, f in functions:
-                    if 'is_handler' in dir(f):
-                        function_list.append(f)
-            option.value = function_list
+        import inspect
+        function_list = []
+        for handler in option.value:
+            if not os.path.isfile(handler + '.py'):
+                raise errors.InvalidConfiguration(
+                    "File %s doesn't exist" % handler)
+            functions = inspect.getmembers(util.module_from_path(handler), inspect.isfunction)
+            for name, f in functions:
+                if 'is_handler' in dir(f):
+                    function_list.append(f)
+
+        option.value = function_list
 
     external_handlers = add_option(
         config_key='extHandlers',
