@@ -871,9 +871,11 @@ def get_config_options():
         import inspect
         function_list = []
         for handler in option.value:
-            if not os.path.isfile(handler + '.py'):
+            filename = handler if handler.endswith('.py') else handler + '.py'
+            print handler
+            if not os.path.isfile(filename):
                 raise errors.InvalidConfiguration(
-                    "File %s doesn't exist" % handler)
+                    "File %s doesn't exist" % filename)
             functions = inspect.getmembers(util.module_from_path(handler), inspect.isfunction)
             for name, f in functions:
                 if 'is_handler' in dir(f):
@@ -881,14 +883,14 @@ def get_config_options():
 
         option.value = function_list
 
-    external_handlers = add_option(
+    data_handlers = add_option(
         config_key='dataHandlers',
         default=None,
         type=list,
         apply_function=apply_data_handlers)
 
-    external_handlers.add_cli(
-        '--ext-handlers', dest='data_handlers',
+    data_handlers.add_cli(
+        '--data-handlers', dest='data_handlers',
         help='dummy help string')
 
     continue_on_error = add_option(
