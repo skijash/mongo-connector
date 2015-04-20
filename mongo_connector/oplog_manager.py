@@ -42,7 +42,7 @@ class OplogThread(threading.Thread):
     """
     def __init__(self, primary_client, doc_managers,
                  oplog_progress_dict, mongos_client=None,
-                 ext_handlers=None, **kwargs):
+                 data_handlers=None, **kwargs):
         super(OplogThread, self).__init__()
 
         self.batch_size = kwargs.get('batch_size', DEFAULT_BATCH_SIZE)
@@ -93,7 +93,7 @@ class OplogThread(threading.Thread):
             err_msg = 'OplogThread: No oplog for thread:'
             LOG.warning('%s %s' % (err_msg, self.primary_connection))
 
-        self.ext_handlers = ext_handlers
+        self.data_handlers = data_handlers
 
     @property
     def fields(self):
@@ -364,8 +364,8 @@ class OplogThread(threading.Thread):
         return entry
 
     def handler_change_entry(self, entry):
-        """Calls external script functions"""
-        for f in self.ext_handlers:
+        """Calls data handling script functions"""
+        for f in self.data_handlers:
             f(entry)
         return entry
 

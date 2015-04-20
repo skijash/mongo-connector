@@ -53,5 +53,5 @@
             "__autoCommitInterval": null
         }
     ],
-    "extHandlers": ["handler1"]
+    "dataHandlers": ["handler1"]
 }

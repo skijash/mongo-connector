@@ -1,13 +1,13 @@
 
 """External handler functions which are meant to change documents
-fetched from mongo need to have at least @handler decorator applied.
+fetched from mongo need to have at least @data_handler decorator applied.
 Without that, they won't be called.
 If you have functions which might raise an exception, or otherwise fail,
 but you want the connector to continue, you can apply @non_critical decorator
 which will catch all exceptions and log them, but won't stop the replication.
 These functions need to expect and accept a json object.
 
-@handler
+@data_handler
 @non_critical
 def append(doc):
     if 'email' in doc:
@@ -34,9 +34,9 @@ def non_critical(f):
     return catch_all
 
 
-def handler(f):
-    """Dummy decorator, used only to differentiate
-    handler functions which should be applied to docs
+def data_handler(f):
+    """Data handler decorator, used to differentiate
+    functions which should be applied to docs
     """
     f.is_handler = True
     return f

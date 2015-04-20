@@ -85,7 +85,7 @@ class Connector(threading.Thread):
         self.tz_aware = kwargs.get('tz_aware', False)
 
         # External handlers for Mongo objects
-        self.ext_handlers = kwargs.get('ext_handlers', None)
+        self.data_handlers = kwargs.get('data_handlers', None)
 
         # SSL keyword arguments to MongoClient.
         ssl_certfile = kwargs.pop('ssl_certfile', None)
@@ -165,7 +165,7 @@ class Connector(threading.Thread):
             ssl_ca_certs=config['ssl.sslCACerts'],
             ssl_cert_reqs=config['ssl.sslCertificatePolicy'],
             tz_aware=config['timezoneAware'],
-            ext_handlers=config['extHandlers']
+            data_handlers=config['dataHandlers']
         )
         return connector
 
@@ -864,9 +864,9 @@ def get_config_options():
         " interval, which should be preferred to this"
         " option.")
 
-    def apply_ext_handlers(option, cli_values):
-        if cli_values['ext_handlers']:
-            option.value = cli_values['ext_handlers'].split(',')
+    def apply_data_handlers(option, cli_values):
+        if cli_values['data_handlers']:
+            option.value = cli_values['data_handlers'].split(',')
 
         import inspect
         function_list = []
@@ -882,13 +882,13 @@ def get_config_options():
         option.value = function_list
 
     external_handlers = add_option(
-        config_key='extHandlers',
+        config_key='dataHandlers',
         default=None,
         type=list,
-        apply_function=apply_ext_handlers)
+        apply_function=apply_data_handlers)
 
     external_handlers.add_cli(
-        '--ext-handlers', dest='ext_handlers',
+        '--ext-handlers', dest='data_handlers',
         help='dummy help string')
 
     continue_on_error = add_option(
