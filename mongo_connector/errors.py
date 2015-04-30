@@ -42,3 +42,7 @@ class EmptyDocsError(MongoConnectorError):
 
 class UpdateDoesNotApply(OperationFailed):
     """Raised when an update operation cannot be applied to a document."""
+
+
+class ReplicaSetNotPresent(MongoConnectorError):
+    """Raised when mongo isn't started with replica set"""

@@ -1,31 +1,13 @@
 
 from pymongo import MongoClient
-from bson.timestamp import Timestamp
 import logging
 import json
 import os
 
+from mongo_connector import errors
 from settings import PROGRESS_DIR, OPLOG_PATTERN, accounts
 
 logger = logging.getLogger(__name__)
-
-
-def bson_ts_to_long(timestamp):
-    """Convert BSON timestamp into integer.
-
-    Conversion rule is based from the specs
-    (http://bsonspec.org/#/specification).
-    """
-    return ((timestamp.time << 32) + timestamp.inc)
-
-
-def long_to_bson_ts(val):
-    """Convert integer into BSON timestamp.
-    """
-    seconds = val >> 32
-    increment = val & 0xffffffff
-
-    return Timestamp(seconds, increment)
 
 
 def read_oplog_file(oplog_file):
@@ -58,8 +40,8 @@ def read_conf(account_name):
 
 def get_oplog_cursor(oplog, oplog_ns_set=None, timestamp=None):
     """Get a cursor to the oplog after the given timestamp, filtering
-    entries not in the namespace set.
-    If no timestamp is specified, returns a cursor to the entire oplog.
+    by entries in the namespace set.
+    If no namespace or timestamp is specified, returns a cursor to the entire oplog.
     """
     query = {}
     if oplog_ns_set:
@@ -79,4 +61,6 @@ def get_client(mongo_address):
     client = MongoClient(mongo_address)
     is_master = client.admin.command("isMaster")
     client.disconnect()
+    if 'setName' not in is_master:
+        raise errors.ReplicaSetNotPresent('Status service startup unsuccessful')
     return MongoClient(mongo_address, replicaSet=is_master['setName'])
