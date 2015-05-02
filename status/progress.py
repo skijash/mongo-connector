@@ -15,9 +15,17 @@ def read_oplog_file(oplog_file):
     return progress[1]
 
 
+def filter_conf(d):
+    s = {}
+    for i in d:
+        if not i.startswith('__') and d[i] not in ({}, None):
+            s[i] = d[i]
+    return s
+
+
 def read_conf(account_name):
     if account_name in accounts:
-        conf = json.load(open(accounts[account_name]['conf']))
+        conf = json.load(open(accounts[account_name]['conf']), object_hook=filter_conf)
     else:
         path = os.path.join(PROGRESS_DIR, '%s.json' % account_name)
 
@@ -34,7 +42,8 @@ def read_conf(account_name):
             return read_conf('base')
 
     accounts[account_name]['mainAddress'] = conf['mainAddress']
-    accounts[account_name]['namespaces'] = conf['namespaces']
+    if 'namespaces' in conf:
+        accounts[account_name]['namespaces'] = conf['namespaces']
     return account_name
 
 
