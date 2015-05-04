@@ -32,12 +32,15 @@ def oplog_progress_collection(account_name, collection_name):
     local_client = client
     if client.host is not account_conf['mainAddress'].split(':')[0]:
         read_conf(account_name)
-        local_client = get_client(accounts['mainAddress'])
+        local_client = get_client(account_conf['mainAddress'])
 
     if collection_name:
         namespaces = ['%s.%s' % (account_name, collection_name)]
     else:
-        namespaces = accounts['namespaces']['include']
+        try:
+            namespaces = account_conf['namespaces']['include']
+        except KeyError:
+            namespaces = None
 
     oplog_cursor = get_oplog_cursor(
         local_client.local.oplog.rs,
