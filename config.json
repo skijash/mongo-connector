@@ -42,7 +42,7 @@
             "db.source1": "db.dest1",
             "db.source2": "db.dest2"
         },
-	"__gridfs": ["db.fs"]
+	    "__gridfs": ["db.fs"]
     },
 
     "docManagers": [
