@@ -96,6 +96,14 @@ restart() {
 }
 
 check_status() {
+    if [[ -z $1 && ! -f $pidfile ]]; then
+        s=`for i in $(ps --no-headers $(pgrep -f mongo_connector) | awk {'print $9'}); do basename $i .json; done;`
+        if [ -n "$s" ]; then
+            echo $s
+            return
+        fi
+    fi
+
     if [ "$DEBIAN" ]; then
 	echo -n "mongo-connector "
 	status_of_proc -p $pidfile mongo-connector
