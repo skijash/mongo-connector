@@ -56,7 +56,10 @@ def update_oplog_state(account_name):
 
 def cleanup(account_name):
     """Delete the files related to the account_name - oplog state and conf"""
-    pass
+    print 'Cleaning up...'
+    subprocess.call(
+        'sudo rm /run/mongo-connector/%s.*' % account_name)
+    print 'Account conf and oplog state removed.'
 
 
 def check_and_start(running, conf):
