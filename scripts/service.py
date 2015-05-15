@@ -4,6 +4,7 @@ import os
 import sys
 import json
 import base64
+import getopt
 import subprocess
 
 
@@ -80,8 +81,8 @@ def stop_and_cleanup(account_name):
     cleanup(account_name)
 
 
-def main():
-    for line in sys.stdin:
+def start_stop(payload):
+    for line in payload:
         conf = json.loads(line)
         running = get_running().split(' ')
 
@@ -97,5 +98,41 @@ def main():
                 stop_service(account_name)
 
 
-if __name__ == '__main__':
-    main()
+class Usage(Exception):
+    def __init__(self, msg):
+        self.msg = msg
+
+
+RUN = {
+    'start': [start_stop],
+    'stop': [start_stop],
+    'stop-and-cleanup': [stop_service, update_oplog_state, cleanup],
+    'cleanup': [cleanup]
+}
+
+
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv
+    try:
+        try:
+            opts, args = getopt.getopt(argv[1:], "h", ["help"])
+
+            try:
+                assert len(args) <= 1
+                for f in RUN[args[0]]:
+                    f(sys.stdin)
+            except (KeyError, AssertionError):
+                raise Usage('Argument should be one of %s' % RUN.keys())
+
+        except getopt.error as msg:
+            raise Usage(msg)
+
+    except Usage as err:
+        print >>sys.stderr, err.msg
+        print >>sys.stderr, "for help use --help"
+        return 2
+
+
+if __name__ == "__main__":
+    sys.exit(main())
