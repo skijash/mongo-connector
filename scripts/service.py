@@ -5,6 +5,7 @@ import sys
 import json
 import base64
 import getopt
+import consul
 import subprocess
 
 
@@ -52,7 +53,9 @@ def stop_service(account_name):
 
 def update_oplog_state(account_name):
     """Update oplog state in kv store"""
-    pass
+    master = consul.Consul()
+    oplog_file = '/var/run/mongo-connector/%s.oplog' % account_name
+    master.kv.put('service/connector/oplog/%s' % account_name, open(oplog_file).read())
 
 
 def cleanup(account_name):
@@ -63,10 +66,7 @@ def cleanup(account_name):
     print 'Account conf and oplog state removed.'
 
 
-def check_and_start(running, conf):
-    account_name = conf['Key'].rsplit('/', 1)[1]
-    conf = base64.b64decode(conf['Value'])
-
+def check_and_start(account_name, running, conf):
     if account_name not in running:
         print '%s connector is not running' % account_name
         write_conf(account_name, conf)
@@ -89,7 +89,9 @@ def start_stop(payload):
         for c in conf:
             # check if the account connector is running
             # and if not, start it
-            check_and_start(running, c)
+            account_name = c['Key'].rsplit('/', 1)[1]
+            conf = base64.b64decode(c['Value'])
+            check_and_start(account_name, running, conf)
 
         if running:
             # if something is left here, it means that a key has been deleted
@@ -104,10 +106,11 @@ class Usage(Exception):
 
 
 RUN = {
-    'start': [start_stop],
-    'stop': [start_stop],
+    'start': [start_service],
+    'stop': [stop_service, update_oplog_state],
     'stop-and-cleanup': [stop_service, update_oplog_state, cleanup],
-    'cleanup': [cleanup]
+    'cleanup': [cleanup],
+    'update-oplog': [update_oplog_state]
 }
 
 
