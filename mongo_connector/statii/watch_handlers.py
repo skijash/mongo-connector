@@ -5,11 +5,14 @@ import sys
 import json
 import base64
 import getopt
-import consul
 import subprocess
+
+from .service import Statii
 
 
 CONFIG_DIR = '/etc/mongo-connector/config'
+
+statii = Statii()
 
 
 def get_running():
@@ -53,9 +56,8 @@ def stop_service(account_name):
 
 def update_oplog_state(account_name):
     """Update oplog state in kv store"""
-    master = consul.Consul()
     oplog_file = '/var/run/mongo-connector/%s.oplog' % account_name
-    master.kv.put('service/connector/oplog/%s' % account_name, open(oplog_file).read())
+    statii.write_oplog_kv(account_name, open(oplog_file).read())
 
 
 def cleanup(account_name):

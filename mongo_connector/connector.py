@@ -25,6 +25,7 @@ import ssl
 import sys
 import threading
 import time
+
 from mongo_connector import config, constants, errors, util
 from mongo_connector.locking_dict import LockingDict
 from mongo_connector.oplog_manager import OplogThread
@@ -32,6 +33,7 @@ from mongo_connector.doc_managers import doc_manager_simulator as simulator
 from mongo_connector.doc_managers.doc_manager_base import DocManagerBase
 from mongo_connector.command_helper import CommandHelper
 from mongo_connector.util import log_fatal_exceptions
+from .service import Statii
 
 from pymongo import MongoClient
 
@@ -74,6 +76,9 @@ class Connector(threading.Thread):
         # The name of the file that stores the progress of the OplogThreads
         self.oplog_checkpoint = kwargs.pop('oplog_checkpoint',
                                            'oplog.timestamp')
+
+        self.name = self.oplog_checkpoint.rsplit('.', 1)
+        self.statii = Statii()
 
         # The set of OplogThreads created
         self.shard_set = {}
@@ -204,7 +209,10 @@ class Connector(threading.Thread):
                 # Write a 2d array to support sharded clusters.
                 json_str = json.dumps(items)
             try:
+                # write to file
                 dest.write(json_str)
+                # fire an event to update oplog in statii kv store
+                self.statii.fire_oplog(self.name)
             except IOError:
                 # Basically wipe the file, copy from backup
                 dest.truncate()
