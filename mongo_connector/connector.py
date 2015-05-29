@@ -33,7 +33,7 @@ from mongo_connector.doc_managers import doc_manager_simulator as simulator
 from mongo_connector.doc_managers.doc_manager_base import DocManagerBase
 from mongo_connector.command_helper import CommandHelper
 from mongo_connector.util import log_fatal_exceptions
-from .service import Statii
+from .statii.service import Statii
 
 from pymongo import MongoClient
 
@@ -875,6 +875,8 @@ def get_config_options():
     def apply_data_handlers(option, cli_values):
         if cli_values['data_handlers']:
             option.value = cli_values['data_handlers'].split(',')
+        else:
+            return
 
         import inspect
         function_list = []
